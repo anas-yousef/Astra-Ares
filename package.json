@@ -1,0 +1,48 @@
+{
+  "name": "astra-ares",
+  "version": "0.2.1",
+  "description": "Adaptive reasoning effort for GPT-6 Astra during Codex tasks, powered by Jev to reduce token usage.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "ares": "bin/ares.mjs",
+    "astra-ares": "bin/astra-ares.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "scripts/build-codex.mjs",
+    "patches",
+    "README.md",
+    "LICENSE",
+    "assets",
+    "THIRD_PARTY_NOTICES.md",
+    "config.example.json",
+    "docs"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "setup": "node bin/ares.mjs setup",
+    "doctor": "node bin/ares.mjs doctor",
+    "format": "prettier --write 'src/*.mjs' 'bin/*.mjs' 'scripts/*.mjs' 'test/*.mjs' 'test/native/*.mjs' '*.json' '*.md' 'docs/*.md' '.github/workflows/*.yml'",
+    "test:native": "bun scripts/test-native.mjs",
+    "start": "node bin/astra-ares.mjs"
+  },
+  "dependencies": {
+    "gpt-tokenizer": "4.0.0"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miuuyy/Astra-Ares.git"
+  },
+  "homepage": "https://github.com/miuuyy/Astra-Ares#readme",
+  "bugs": {
+    "url": "https://github.com/miuuyy/Astra-Ares/issues"
+  }
+}

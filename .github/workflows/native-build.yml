@@ -1,0 +1,18 @@
+name: native-build
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --ignore-scripts
+      - run: node bin/ares.mjs setup
+      - run: node bin/astra-ares.mjs --version
+      - uses: oven-sh/setup-bun@v2
+      - run: JEV_TEST_BINARY="$HOME/.local/share/astra-ares/bin/codex" npm run test:native
