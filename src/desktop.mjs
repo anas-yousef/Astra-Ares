@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  renameSync,
   writeFileSync,
 } from "node:fs";
 import { spawn, execFileSync } from "node:child_process";
@@ -14,6 +15,10 @@ import { launchWithBridge, verifyBinary } from "./launch.mjs";
 import { loadConfig, locations } from "./config.mjs";
 
 export const DESKTOP_LABEL = "io.github.miuuyy.astra-ares.desktop";
+export const DESKTOP_FEATURE_FLAGS = [
+  "step_model_switching",
+  "reasoning_effort_override",
+];
 
 export function defaultDesktopCodexHome() {
   return join(homedir(), ".codex");
@@ -87,6 +92,111 @@ export function createLaunchAgentPlist({ envScript, stdout, stderr }) {
 `;
 }
 
+function splitTomlLines(text) {
+  if (!text.trim()) return [];
+  const lines = text.replaceAll("\r\n", "\n").split("\n");
+  if (lines.at(-1) === "") lines.pop();
+  return lines;
+}
+
+function isTomlTable(line) {
+  return /^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(line);
+}
+
+function isFeaturesTable(line) {
+  return /^\s*\[features\]\s*(?:#.*)?$/.test(line);
+}
+
+function featureAssignment(line) {
+  const match =
+    /^(\s*)(step_model_switching|reasoning_effort_override)\s*=/.exec(line);
+  return match
+    ? {
+        indent: match[1],
+        key: match[2],
+      }
+    : null;
+}
+
+export function configWithDesktopFeatureFlags(text) {
+  const lines = splitTomlLines(text);
+  const featureLines = DESKTOP_FEATURE_FLAGS.map((flag) => `${flag} = true`);
+  const sectionStart = lines.findIndex(isFeaturesTable);
+  if (sectionStart === -1) {
+    if (lines.length && lines.at(-1).trim() !== "") lines.push("");
+    lines.push("[features]", ...featureLines);
+    return `${lines.join("\n")}\n`;
+  }
+
+  let sectionEnd = lines.findIndex(
+    (line, index) => index > sectionStart && isTomlTable(line),
+  );
+  if (sectionEnd === -1) sectionEnd = lines.length;
+
+  const found = new Set();
+  for (let index = sectionStart + 1; index < sectionEnd; index += 1) {
+    const assignment = featureAssignment(lines[index]);
+    if (!assignment) continue;
+    found.add(assignment.key);
+    lines[index] = `${assignment.indent}${assignment.key} = true`;
+  }
+
+  const missing = DESKTOP_FEATURE_FLAGS.filter((flag) => !found.has(flag)).map(
+    (flag) => `${flag} = true`,
+  );
+  if (missing.length) {
+    let insertAt = sectionEnd;
+    while (insertAt > sectionStart + 1 && lines[insertAt - 1].trim() === "")
+      insertAt -= 1;
+    lines.splice(insertAt, 0, ...missing);
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+export function readDesktopFeatureFlags(codexHome = defaultDesktopCodexHome()) {
+  const configPath = join(codexHome, "config.toml");
+  const flags = Object.fromEntries(
+    DESKTOP_FEATURE_FLAGS.map((flag) => [flag, false]),
+  );
+  if (!existsSync(configPath)) return { configPath, flags };
+
+  const lines = splitTomlLines(readFileSync(configPath, "utf8"));
+  const sectionStart = lines.findIndex(isFeaturesTable);
+  if (sectionStart === -1) return { configPath, flags };
+  let sectionEnd = lines.findIndex(
+    (line, index) => index > sectionStart && isTomlTable(line),
+  );
+  if (sectionEnd === -1) sectionEnd = lines.length;
+
+  for (let index = sectionStart + 1; index < sectionEnd; index += 1) {
+    const assignment = featureAssignment(lines[index]);
+    if (!assignment) continue;
+    flags[assignment.key] = /^\s*=\s*true\s*(?:#.*)?$/.test(
+      lines[index].slice(assignment.key.length + assignment.indent.length),
+    );
+  }
+  return { configPath, flags };
+}
+
+export function writeDesktopFeatureFlags(
+  codexHome = defaultDesktopCodexHome(),
+) {
+  mkdirSync(codexHome, { recursive: true, mode: 0o700 });
+  const configPath = join(codexHome, "config.toml");
+  const current = existsSync(configPath)
+    ? readFileSync(configPath, "utf8")
+    : "";
+  const next = configWithDesktopFeatureFlags(current);
+  if (next !== current) {
+    const tempPath = `${configPath}.${process.pid}.tmp`;
+    writeFileSync(tempPath, next, { mode: 0o600 });
+    chmodSync(tempPath, 0o600);
+    renameSync(tempPath, configPath);
+  }
+  return configPath;
+}
+
 function runChild(binary, args, env = process.env) {
   const child = spawn(binary, args, { stdio: "inherit", env });
   return new Promise((resolve, reject) => {
@@ -149,6 +259,7 @@ export function writeDesktopFiles(config, { codexHome } = {}) {
     throw new Error("desktop codex home must be an absolute path");
   if (!existsSync(paths.launcher))
     throw new Error(`Desktop launcher is missing: ${paths.launcher}`);
+  const codexConfig = writeDesktopFeatureFlags(selectedCodexHome);
   mkdirSync(dirname(paths.envScript), { recursive: true, mode: 0o700 });
   mkdirSync(dirname(paths.plist), { recursive: true, mode: 0o700 });
   mkdirSync(dirname(paths.stdout), { recursive: true, mode: 0o700 });
@@ -170,7 +281,7 @@ export function writeDesktopFiles(config, { codexHome } = {}) {
     }),
     { mode: 0o644 },
   );
-  return { ...paths, codexHome: selectedCodexHome };
+  return { ...paths, codexHome: selectedCodexHome, codexConfig };
 }
 
 function userDomain() {
@@ -244,11 +355,16 @@ export function desktopStatus() {
       return "";
     }
   };
+  const codexHome = envValue("CODEX_HOME");
+  const codexConfig = readDesktopFeatureFlags(
+    codexHome || defaultDesktopCodexHome(),
+  );
   return {
     loaded,
     paths,
     codexCliPath: envValue("CODEX_CLI_PATH"),
-    codexHome: envValue("CODEX_HOME"),
+    codexHome,
+    codexConfig,
   };
 }
 

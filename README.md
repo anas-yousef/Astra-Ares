@@ -86,7 +86,7 @@ On macOS, Astra-Ares can expose the same logical models inside the Codex desktop
 ares desktop install
 ```
 
-Then quit and reopen the Codex app. The model picker can show **Astra Ares** as an adaptive model, and the existing onboarding modal may still use the stored prototype name **Astra-Jev**.
+The installer also enables `features.step_model_switching` and `features.reasoning_effort_override` in the selected desktop Codex home, because the desktop app's session config must allow native effort updates. Then quit and reopen the Codex app. The model picker can show **Astra Ares** as an adaptive model, and the existing onboarding modal may still use the stored prototype name **Astra-Jev**.
 
 <p align="center">
   <img src="assets/readme/desktop-astra-ares-picker.png" width="396" alt="Codex desktop model picker showing Astra Ares selected.">
@@ -104,7 +104,7 @@ ares desktop open        # install and open a fresh Codex app instance
 ares desktop uninstall   # remove the launch override
 ```
 
-If the app was already running before installation, it may keep the old app-server until fully quit. See [troubleshooting](docs/troubleshooting.md#codex-desktop-app) for the feature-flag error and recovery steps.
+If the app was already running before installation, it may keep the old app-server or old session config until fully quit. See [troubleshooting](docs/troubleshooting.md#codex-desktop-app) for the feature-flag error and recovery steps.
 
 ## Everyday use
 

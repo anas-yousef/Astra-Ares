@@ -189,7 +189,7 @@ try {
     if (desktopCommand === "install") {
       const installed = installDesktop({ codexHome: options["codex-home"] });
       console.log(
-        `Codex desktop integration installed.\nLauncher: ${installed.launcher}\nLaunchAgent: ${installed.plist}\nCodex home: ${installed.codexHome}\nQuit and reopen the Codex app to use Astra Ares.`,
+        `Codex desktop integration installed.\nLauncher: ${installed.launcher}\nLaunchAgent: ${installed.plist}\nCodex home: ${installed.codexHome}\nCodex config: ${installed.codexConfig}\nQuit and reopen the Codex app to use Astra Ares.`,
       );
     } else if (desktopCommand === "status") {
       const status = desktopStatus();
@@ -199,6 +199,8 @@ try {
             loaded: status.loaded,
             codexCliPath: status.codexCliPath || null,
             codexHome: status.codexHome || null,
+            codexConfig: status.codexConfig.configPath,
+            desktopFeatureFlags: status.codexConfig.flags,
             expectedLauncher: status.paths.launcher,
             launchAgent: status.paths.plist,
           },
@@ -209,7 +211,7 @@ try {
     } else if (desktopCommand === "open") {
       const opened = openDesktop();
       console.log(
-        `Codex app opened with Astra Ares.\nLauncher: ${opened.launcher}\nCodex home: ${opened.codexHome}`,
+        `Codex app opened with Astra Ares.\nLauncher: ${opened.launcher}\nCodex home: ${opened.codexHome}\nCodex config: ${opened.codexConfig}`,
       );
     } else if (desktopCommand === "uninstall") {
       const removed = uninstallDesktop();

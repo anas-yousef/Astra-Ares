@@ -30,7 +30,7 @@ If the desktop UI shows Astra Ares but a turn fails with:
 Fatal error: Jev bridge: Jev requires native step_model_switching and reasoning_effort_override
 ```
 
-the selected model reached a patched Ares checkpoint, but the running app-server was not started with both native feature flags. This usually means the Codex app was already running before `ares desktop install`, or it launched without the installed `CODEX_CLI_PATH` override.
+the selected model reached a patched Ares checkpoint, but the running desktop session does not have both native feature flags enabled. This usually means the Codex app was already running before `ares desktop install`, it launched without the installed `CODEX_CLI_PATH` override, or the selected desktop Codex home does not have the required feature flags persisted in `config.toml`.
 
 Fix:
 
@@ -39,7 +39,7 @@ ares desktop install
 ares desktop status
 ```
 
-Confirm `codexCliPath` points at `codex-desktop-launcher.mjs`, then fully quit and reopen the Codex app. `ares desktop open` also installs the LaunchAgent and opens a fresh app instance with the override. Do not launch `<data>/bin/codex app-server` directly for desktop use; the Ares desktop launcher starts the Jev bridge and prepends `features.step_model_switching=true` and `features.reasoning_effort_override=true`.
+Confirm `codexCliPath` points at `codex-desktop-launcher.mjs` and `desktopFeatureFlags` shows both required flags as `true`, then fully quit and reopen the Codex app. `ares desktop open` also installs the LaunchAgent, writes the feature flags, and opens a fresh app instance with the override. Do not launch `<data>/bin/codex app-server` directly for desktop use; the Ares desktop launcher starts the Jev bridge and prepends `features.step_model_switching=true` and `features.reasoning_effort_override=true`, while `ares desktop install` persists those flags for the desktop session config.
 
 ## Native warning items during resume
 

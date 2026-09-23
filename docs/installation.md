@@ -52,7 +52,7 @@ Existing custom profiles can be selected with an absolute `codexHome` in the con
 
 ## Codex desktop app on macOS
 
-`ares desktop install` installs a per-user LaunchAgent that sets `CODEX_CLI_PATH` and `CODEX_HOME` for future Codex desktop app launches. The app then starts the patched Ares app-server instead of the bundled app-server. Astra-Ares still does not modify `/Applications/ChatGPT.app` or replace any files inside the signed application bundle.
+`ares desktop install` installs a per-user LaunchAgent that sets `CODEX_CLI_PATH` and `CODEX_HOME` for future Codex desktop app launches. The app then starts the patched Ares app-server instead of the bundled app-server. The installer also enables the required native `step_model_switching` and `reasoning_effort_override` flags in the selected desktop Codex home. Astra-Ares still does not modify `/Applications/ChatGPT.app` or replace any files inside the signed application bundle.
 
 ```sh
 ares desktop install

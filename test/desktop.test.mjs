@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  configWithDesktopFeatureFlags,
   createDesktopEnvScript,
   createLaunchAgentPlist,
   DESKTOP_LABEL,
@@ -42,4 +43,29 @@ test("desktop launcher keeps app-server stdio clean", () => {
   assert(!source.includes("console.log"));
   assert(!source.includes("console.error"));
   assert.match(source, /recordDesktopLauncherError/);
+});
+
+test("desktop config appends feature flags when the features table is missing", () => {
+  assert.equal(
+    configWithDesktopFeatureFlags('model = "gpt-6-astra"\n'),
+    'model = "gpt-6-astra"\n\n[features]\nstep_model_switching = true\nreasoning_effort_override = true\n',
+  );
+});
+
+test("desktop config inserts missing flags into an existing features table", () => {
+  assert.equal(
+    configWithDesktopFeatureFlags(
+      "[features]\nmemories = true\n\n[projects]\nexample = true\n",
+    ),
+    "[features]\nmemories = true\nstep_model_switching = true\nreasoning_effort_override = true\n\n[projects]\nexample = true\n",
+  );
+});
+
+test("desktop config forces disabled Ares feature flags back on", () => {
+  assert.equal(
+    configWithDesktopFeatureFlags(
+      "[features]\nstep_model_switching = false\nreasoning_effort_override = false\n",
+    ),
+    "[features]\nstep_model_switching = true\nreasoning_effort_override = true\n",
+  );
 });
