@@ -20,6 +20,8 @@ astra-ares
 
 Setup verifies the source archive and patch checksums, builds a separate Codex, and installs its matching checksum-pinned code-mode companion. A subsequent setup reuses the installed compatible binary. The normal Codex CLI and desktop application are not patched in place.
 
+On macOS, setup preserves Rust symbol tables so proc-macro libraries can load on macOS 27. This increases build artifact size; it does not enable full debug information. See [build troubleshooting](troubleshooting.md#macos-mis-aligned-linkedit-string-pool) if an older checkout failed while loading `sqlx_macros`.
+
 This preview has no public npm release or prebuilt Ares binary. Use the repository source. Apple Silicon macOS has local build and runtime acceptance; Intel macOS and Linux need platform acceptance. Windows is unsupported.
 
 ## Without global commands
