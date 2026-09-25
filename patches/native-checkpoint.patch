@@ -13930,7 +13930,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..cf91524aadbde7134a00a60331c593d8e786aba6
 --- /dev/null
 +++ b/codex-rs/core/src/session/step_controller.rs
-@@ -0,0 +1,339 @@
+@@ -0,0 +1,341 @@
 +//! Opt-in evaluator bridge for every native CLI frontend. The bridge selects an
 +//! effort; core applies it through the same live settings path as app-server.
 +
@@ -13991,6 +13991,7 @@ index 0000000000000000000000000000000000000000..cf91524aadbde7134a00a60331c593d8
 +    turn_id: String,
 +    step: u64,
 +    model: String,
++    selection: String,
 +    supported_efforts: Vec<ReasoningEffort>,
 +    current_effort: Option<ReasoningEffort>,
 +    input_revision: u64,
@@ -14163,6 +14164,7 @@ index 0000000000000000000000000000000000000000..cf91524aadbde7134a00a60331c593d8
 +            turn_id: turn.sub_id.clone(),
 +            step: self.sequence,
 +            model: model.slug.clone(),
++            selection: selection.to_string(),
 +            supported_efforts: supported_efforts.clone(),
 +            current_effort: current.reasoning_effort().cloned(),
 +            input_revision: self.input_revision,
@@ -14526,16 +14528,22 @@ diff --git a/codex-rs/protocol/src/openai_models.rs b/codex-rs/protocol/src/open
 index 79f268ce3bad5a930e338e11374cd3b13807e95f..e83a025f958a945549e579c63e727b15513bc2b3 100644
 --- a/codex-rs/protocol/src/openai_models.rs
 +++ b/codex-rs/protocol/src/openai_models.rs
-@@ -53,6 +53,28 @@ pub use guardian_v2::GuardianV2TranscriptModelConfig;
+@@ -53,6 +53,34 @@ pub use guardian_v2::GuardianV2TranscriptModelConfig;
  pub const MODEL_SPECIALTY_CYBER: &str = "cyber";
  pub const SPEED_TIER_FAST: &str = "fast";
  
 +/// Local adaptive-effort selection. Requests still use the underlying model.
 +pub const ASTRA_JEV_MODEL: &str = "Astra-Jev";
++pub const ASTRA_JEV_ECONOMY_MODEL: &str = "Astra-Jev-Economy";
 +pub const ASTRA_JEV_BASE_MODEL: &str = "gpt-6-astra";
 +// Stable selection IDs, provider model IDs, and user-facing names.
-+pub const JEV_MODELS: [(&str, &str, &str); 3] = [
++pub const JEV_MODELS: [(&str, &str, &str); 4] = [
 +    (ASTRA_JEV_MODEL, ASTRA_JEV_BASE_MODEL, "Astra Ares"),
++    (
++        ASTRA_JEV_ECONOMY_MODEL,
++        ASTRA_JEV_BASE_MODEL,
++        "Astra Ares Economy",
++    ),
 +    ("Luna-Jev", "gpt-6-luna", "Luna Ares"),
 +    ("Sol-Jev", "gpt-6-sol", "Sol Ares"),
 +];

@@ -48,7 +48,7 @@ The binary must contain the compatible native checkpoint, report the pinned Code
 
 Ares creates its own Codex home under `~/.local/share/astra-ares/codex-home`. It reuses an existing Codex `auth.json` via a symlink when available. Otherwise run `astra-ares login`.
 
-Existing custom profiles can be selected with an absolute `codexHome` in the configuration. This is useful when continuing sessions from the earlier Jev prototype. The model picker provides **Astra Ares**, **Sol Ares**, and **Luna Ares** for available base models. The selected entry is preserved when a session resumes.
+Existing custom profiles can be selected with an absolute `codexHome` in the configuration. This is useful when continuing sessions from the earlier Jev prototype. The model picker provides **Astra Ares**, **Astra Ares Economy**, **Sol Ares**, and **Luna Ares** for available base models. Economy uses Astra with Jev capped to low, medium, or high; switch to normal Astra Ares when xhigh, max, or ultra should remain available. The selected entry is preserved when a session resumes.
 
 ## Codex desktop app on macOS
 

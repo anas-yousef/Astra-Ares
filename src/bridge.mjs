@@ -3,6 +3,22 @@ import { chmodSync } from "node:fs";
 import { EFFORTS } from "./jev.mjs";
 import { budgetToolOutputs } from "./tool-output-budget.mjs";
 
+const ECONOMY_SELECTIONS = new Set(["Astra-Jev-Economy"]);
+const ECONOMY_MAX_EFFORT = "high";
+
+function policyForSelection(selection) {
+  return ECONOMY_SELECTIONS.has(selection) ? "economy" : "default";
+}
+
+function effortsForPolicy(supportedEfforts, policy) {
+  if (policy !== "economy") return supportedEfforts;
+  const max = EFFORTS.indexOf(ECONOMY_MAX_EFFORT);
+  const capped = supportedEfforts.filter(
+    (effort) => EFFORTS.indexOf(effort) <= max,
+  );
+  return capped.length ? capped : supportedEfforts;
+}
+
 export function frame(value) {
   const body = Buffer.from(JSON.stringify(value));
   const size = Buffer.alloc(4);
@@ -72,6 +88,7 @@ export class TurnEvaluator {
       p.step !== this.lastStep + 1 ||
       typeof p.threadId !== "string" ||
       typeof p.turnId !== "string" ||
+      (p.selection !== undefined && typeof p.selection !== "string") ||
       (this.threadId &&
         (p.threadId !== this.threadId || p.turnId !== this.turnId)) ||
       typeof p.model !== "string" ||
@@ -92,16 +109,20 @@ export class TurnEvaluator {
       throw new Error("Invalid native checkpoint");
     this.threadId = p.threadId;
     this.turnId = p.turnId;
+    const selection = p.selection ?? p.model;
+    const policy = policyForSelection(selection);
     const newToolFailures = p.failedToolCount - this.failures;
     if (
       newToolFailures ||
       p.model !== this.model ||
+      selection !== this.selection ||
       p.inputRevision !== this.inputRevision ||
       p.context.latestUserPrompt !== this.latestPrompt ||
       (this.previousEffort && p.currentEffort !== this.previousEffort)
     )
       this.remaining = 0;
     this.model = p.model;
+    this.selection = selection;
     this.latestPrompt = p.context.latestUserPrompt;
     this.inputRevision = p.inputRevision;
     this.failures = p.failedToolCount;
@@ -112,9 +133,12 @@ export class TurnEvaluator {
       const { recentToolCalls, stats } = budgetToolOutputs(
         p.context.recentToolCalls,
       );
+      const supportedEfforts = effortsForPolicy(p.supportedEfforts, policy);
       const state = {
         model: p.model,
-        supportedEfforts: p.supportedEfforts,
+        selection,
+        policy,
+        supportedEfforts,
         latestUserPrompt: p.context.latestUserPrompt,
         originalTask:
           p.context.originalTurnPrompt === p.context.latestUserPrompt
@@ -150,6 +174,8 @@ export class TurnEvaluator {
         turnId: p.turnId,
         step: p.step,
         model: p.model,
+        selection,
+        policy,
         contextStats,
       });
       this.decision = await this.jev.decide(state, {
@@ -173,6 +199,8 @@ export class TurnEvaluator {
       turnId: p.turnId,
       step: p.step,
       model: p.model,
+      selection,
+      policy,
       ...d,
       previousEffort: p.currentEffort,
       reused,

@@ -34,6 +34,7 @@ export function verifyBinary(binary) {
     "CODEX_STEP_CONTROLLER_CONTEXT_V3",
     "Jev requires its bridge",
     "Astra Ares",
+    "Astra Ares Economy",
     "Luna Ares",
     "Sol Ares",
   ]) {
