@@ -32,7 +32,8 @@
     "start": "node bin/astra-ares.mjs"
   },
   "dependencies": {
-    "gpt-tokenizer": "4.0.0"
+    "gpt-tokenizer": "4.0.0",
+    "smol-toml": "1.9.0"
   },
   "devDependencies": {
     "prettier": "3.6.2"

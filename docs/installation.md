@@ -78,6 +78,12 @@ ares desktop uninstall
 
 By default the desktop integration uses the normal Codex home at `~/.codex`, so your desktop app keeps its ordinary settings, plugins, and history. Use `--codex-home /absolute/path` only if you intentionally want a separate Codex profile. Ares' Jev key, managed binary, runs, and logs stay under the Astra-Ares data directory.
 
+The selected home is saved in `desktop-state.json` under the Ares data directory. Subsequent `desktop install` and `desktop open` reuse it unless a new home is explicitly selected. Installation snapshots existing launch overrides; reinstalling while Ares still owns an override preserves the original snapshot. If another tool has changed an override, a subsequent explicit install records that new value before taking ownership again.
+
+Config updates parse TOML and validate the serialized result before an atomic replacement. Dotted keys, quoted keys, and inline tables are supported. Serialization normalizes formatting and removes comments; the original file is kept once as `config.toml.astra-ares.bak` with owner-only permissions. Invalid TOML is rejected without replacing the config.
+
+Uninstall removes the LaunchAgent and its environment script, and restores each prior launch override only if its current value still matches the value Ares installed. Previously unset variables are unset again; changes made by other tools are left alone. On older installations without a state snapshot, overrides are left untouched because their prior values cannot be recovered. The two native feature flags intentionally remain enabled in `config.toml`; they do not select Ares or start its bridge. You may remove them manually after uninstall if no other workflow needs them. Uninstall does not restore the whole config backup, which could discard later user edits.
+
 ## Update
 
 Quit Ares first. Update the checkout, then run:

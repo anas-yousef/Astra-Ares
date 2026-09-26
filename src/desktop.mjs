@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readFileSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { spawn, execFileSync } from "node:child_process";
@@ -13,6 +14,8 @@ import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { launchWithBridge, verifyBinary } from "./launch.mjs";
 import { loadConfig, locations } from "./config.mjs";
+import { parse, stringify } from "smol-toml";
+import { isDeepStrictEqual } from "node:util";
 
 export const DESKTOP_LABEL = "io.github.miuuyy.astra-ares.desktop";
 export const DESKTOP_FEATURE_FLAGS = [
@@ -41,6 +44,7 @@ export function desktopPaths(config = loadConfig(), options = {}) {
     ),
     stdout: join(home, "logs/codex-desktop-env.out.log"),
     stderr: join(home, "logs/codex-desktop-env.err.log"),
+    state: join(home, "desktop-state.json"),
   };
 }
 
@@ -92,66 +96,23 @@ export function createLaunchAgentPlist({ envScript, stdout, stderr }) {
 `;
 }
 
-function splitTomlLines(text) {
-  if (!text.trim()) return [];
-  const lines = text.replaceAll("\r\n", "\n").split("\n");
-  if (lines.at(-1) === "") lines.pop();
-  return lines;
-}
-
-function isTomlTable(line) {
-  return /^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(line);
-}
-
-function isFeaturesTable(line) {
-  return /^\s*\[features\]\s*(?:#.*)?$/.test(line);
-}
-
-function featureAssignment(line) {
-  const match =
-    /^(\s*)(step_model_switching|reasoning_effort_override)\s*=/.exec(line);
-  return match
-    ? {
-        indent: match[1],
-        key: match[2],
-      }
-    : null;
-}
-
 export function configWithDesktopFeatureFlags(text) {
-  const lines = splitTomlLines(text);
-  const featureLines = DESKTOP_FEATURE_FLAGS.map((flag) => `${flag} = true`);
-  const sectionStart = lines.findIndex(isFeaturesTable);
-  if (sectionStart === -1) {
-    if (lines.length && lines.at(-1).trim() !== "") lines.push("");
-    lines.push("[features]", ...featureLines);
-    return `${lines.join("\n")}\n`;
-  }
-
-  let sectionEnd = lines.findIndex(
-    (line, index) => index > sectionStart && isTomlTable(line),
-  );
-  if (sectionEnd === -1) sectionEnd = lines.length;
-
-  const found = new Set();
-  for (let index = sectionStart + 1; index < sectionEnd; index += 1) {
-    const assignment = featureAssignment(lines[index]);
-    if (!assignment) continue;
-    found.add(assignment.key);
-    lines[index] = `${assignment.indent}${assignment.key} = true`;
-  }
-
-  const missing = DESKTOP_FEATURE_FLAGS.filter((flag) => !found.has(flag)).map(
-    (flag) => `${flag} = true`,
-  );
-  if (missing.length) {
-    let insertAt = sectionEnd;
-    while (insertAt > sectionStart + 1 && lines[insertAt - 1].trim() === "")
-      insertAt -= 1;
-    lines.splice(insertAt, 0, ...missing);
-  }
-
-  return `${lines.join("\n")}\n`;
+  const config = parse(text, { integersAsBigInt: true });
+  if (
+    config.features !== undefined &&
+    (!config.features ||
+      typeof config.features !== "object" ||
+      Array.isArray(config.features))
+  )
+    throw new Error("Codex features must be a TOML table");
+  config.features ??= Object.create(null);
+  if (DESKTOP_FEATURE_FLAGS.every((flag) => config.features[flag] === true))
+    return text;
+  for (const flag of DESKTOP_FEATURE_FLAGS) config.features[flag] = true;
+  const next = stringify(config);
+  if (!isDeepStrictEqual(parse(next, { integersAsBigInt: true }), config))
+    throw new Error("Desktop config TOML round-trip validation failed");
+  return next;
 }
 
 export function readDesktopFeatureFlags(codexHome = defaultDesktopCodexHome()) {
@@ -161,21 +122,9 @@ export function readDesktopFeatureFlags(codexHome = defaultDesktopCodexHome()) {
   );
   if (!existsSync(configPath)) return { configPath, flags };
 
-  const lines = splitTomlLines(readFileSync(configPath, "utf8"));
-  const sectionStart = lines.findIndex(isFeaturesTable);
-  if (sectionStart === -1) return { configPath, flags };
-  let sectionEnd = lines.findIndex(
-    (line, index) => index > sectionStart && isTomlTable(line),
-  );
-  if (sectionEnd === -1) sectionEnd = lines.length;
-
-  for (let index = sectionStart + 1; index < sectionEnd; index += 1) {
-    const assignment = featureAssignment(lines[index]);
-    if (!assignment) continue;
-    flags[assignment.key] = /^\s*=\s*true\s*(?:#.*)?$/.test(
-      lines[index].slice(assignment.key.length + assignment.indent.length),
-    );
-  }
+  const config = parse(readFileSync(configPath, "utf8"));
+  for (const flag of DESKTOP_FEATURE_FLAGS)
+    flags[flag] = config.features?.[flag] === true;
   return { configPath, flags };
 }
 
@@ -189,6 +138,12 @@ export function writeDesktopFeatureFlags(
     : "";
   const next = configWithDesktopFeatureFlags(current);
   if (next !== current) {
+    // Keep the original layout/comments for recovery; never replace this backup.
+    if (current && !existsSync(`${configPath}.astra-ares.bak`))
+      writeFileSync(`${configPath}.astra-ares.bak`, current, {
+        mode: 0o600,
+        flag: "wx",
+      });
     const tempPath = `${configPath}.${process.pid}.tmp`;
     writeFileSync(tempPath, next, { mode: 0o600 });
     chmodSync(tempPath, 0o600);
@@ -310,17 +265,73 @@ function requireMacDesktop() {
     throw new Error("Codex desktop integration is currently macOS-only");
 }
 
+function readDesktopState(paths) {
+  if (!existsSync(paths.state)) return null;
+  const state = JSON.parse(readFileSync(paths.state, "utf8"));
+  if (
+    state.version !== 1 ||
+    typeof state.codexHome !== "string" ||
+    !state.codexHome.startsWith("/") ||
+    !state.previous ||
+    !state.owned ||
+    !["CODEX_CLI_PATH", "CODEX_HOME"].every(
+      (key) =>
+        (state.previous[key] === null ||
+          typeof state.previous[key] === "string") &&
+        typeof state.owned[key] === "string",
+    )
+  )
+    throw new Error(
+      "Invalid desktop installation state; refusing to overwrite it",
+    );
+  return state;
+}
+
+function launchEnv(name) {
+  try {
+    return runLaunchctl(["getenv", name]).replace(/\n$/, "");
+  } catch (error) {
+    if (error.status === 1) return null;
+    throw error;
+  }
+}
+
 export function installDesktop({ codexHome } = {}) {
   requireMacDesktop();
   const config = loadConfig();
-  const paths = writeDesktopFiles(config, { codexHome });
+  const locations = desktopPaths(config);
+  const previousState = readDesktopState(locations);
+  const selectedHome =
+    codexHome ?? previousState?.codexHome ?? defaultDesktopCodexHome();
+  const previous = {};
+  for (const key of ["CODEX_CLI_PATH", "CODEX_HOME"]) {
+    const current = launchEnv(key);
+    previous[key] =
+      previousState && current === previousState.owned[key]
+        ? previousState.previous[key]
+        : current;
+  }
+  const paths = writeDesktopFiles(config, { codexHome: selectedHome });
+  const state = {
+    version: 1,
+    codexHome: selectedHome,
+    previous,
+    owned: { CODEX_CLI_PATH: paths.launcher, CODEX_HOME: selectedHome },
+  };
+  const temporary = `${paths.state}.${process.pid}.tmp`;
+  writeFileSync(temporary, JSON.stringify(state, null, 2) + "\n", {
+    mode: 0o600,
+  });
+  renameSync(temporary, paths.state);
   const domain = userDomain();
   tryLaunchctl(["bootout", domain, paths.plist]);
+  runLaunchctl(["enable", `${domain}/${DESKTOP_LABEL}`]);
   runLaunchctl(["bootstrap", domain, paths.plist], { ignore: true });
-  tryLaunchctl(["enable", `${domain}/${DESKTOP_LABEL}`]);
   runLaunchctl(["kickstart", "-k", `${domain}/${DESKTOP_LABEL}`], {
     ignore: true,
   });
+  for (const [key, value] of Object.entries(state.owned))
+    runLaunchctl(["setenv", key, value]);
   return paths;
 }
 
@@ -328,11 +339,23 @@ export function uninstallDesktop() {
   requireMacDesktop();
   const config = loadConfig();
   const paths = desktopPaths(config);
+  const state = readDesktopState(paths);
   const domain = userDomain();
   tryLaunchctl(["bootout", domain, paths.plist]);
   tryLaunchctl(["disable", `${domain}/${DESKTOP_LABEL}`]);
-  tryLaunchctl(["unsetenv", "CODEX_CLI_PATH"]);
-  tryLaunchctl(["unsetenv", "CODEX_HOME"]);
+  if (state) {
+    for (const key of ["CODEX_CLI_PATH", "CODEX_HOME"]) {
+      if (launchEnv(key) !== state.owned[key]) continue;
+      runLaunchctl(
+        state.previous[key] === null
+          ? ["unsetenv", key]
+          : ["setenv", key, state.previous[key]],
+      );
+    }
+  }
+  rmSync(paths.plist, { force: true });
+  rmSync(paths.envScript, { force: true });
+  rmSync(paths.state, { force: true });
   return paths;
 }
 

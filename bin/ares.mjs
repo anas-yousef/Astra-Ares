@@ -216,7 +216,7 @@ try {
     } else if (desktopCommand === "uninstall") {
       const removed = uninstallDesktop();
       console.log(
-        `Codex desktop integration disabled.\nLaunchAgent: ${removed.plist}\nQuit and reopen the Codex app to return to the bundled app-server.`,
+        `Codex desktop integration disabled.\nLaunchAgent: ${removed.plist}\nSaved launch settings restored where still owned by Ares; settings without a saved snapshot were retained.\nNative feature flags remain enabled in config.toml.\nQuit and reopen the Codex app to apply the remaining launch settings.`,
       );
     } else throw new Error(`Unknown desktop command: ${desktopCommand}`);
   } else throw new Error(`Unknown command: ${command}\n${help}`);
