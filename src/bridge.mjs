@@ -4,7 +4,7 @@ import { EFFORTS } from "./jev.mjs";
 import { budgetToolOutputs } from "./tool-output-budget.mjs";
 
 const ECONOMY_SELECTIONS = new Set(["Astra-Jev-Economy"]);
-const ECONOMY_MAX_EFFORT = "high";
+const ECONOMY_MAX_EFFORT = "xhigh";
 
 function policyForSelection(selection) {
   return ECONOMY_SELECTIONS.has(selection) ? "economy" : "default";

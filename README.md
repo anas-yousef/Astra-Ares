@@ -67,7 +67,7 @@ Your selected model uses your existing **Codex login with access to that model**
 astra-ares
 ```
 
-The normal Codex terminal opens. In `/model`, select **Astra Ares**, **Astra Ares Economy**, **Sol Ares**, or **Luna Ares**. Each entry keeps its underlying model fixed while Jev chooses the reasoning effort. Economy caps Astra's offered choices at low, medium, or high for quota-sensitive work; use the normal Astra entry when xhigh, max, or ultra should remain available. Entries appear when the corresponding model is available in your Codex catalog. New Ares profiles select Astra Ares by default.
+The normal Codex terminal opens. In `/model`, select **Astra Ares**, **Astra Ares Economy**, **Sol Ares**, or **Luna Ares**. Each entry keeps its underlying model fixed while Jev chooses the reasoning effort. Economy caps Astra's offered choices at low through xhigh for quota-sensitive work, with Jev instructed to use xhigh only for rare high-risk ambiguity; use the normal Astra entry when max or ultra should remain available. Entries appear when the corresponding model is available in your Codex catalog. New Ares profiles select Astra Ares by default.
 
 Confirmed effort changes appear directly in the transcript. Example display:
 

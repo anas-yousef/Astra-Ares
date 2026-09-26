@@ -33,7 +33,7 @@ const BASE_EFFORT_INSTRUCTIONS =
 
 const POLICY_INSTRUCTIONS = {
   economy:
-    "Economy policy: prioritize token conservation. Prefer low or medium whenever they can make reliable forward progress. Use high only when the next generation has material correctness, safety, data-integrity, or expensive-rework risk. This profile intentionally does not offer xhigh, max, or ultra; use the normal Ares profile for work that truly requires those levels.",
+    "Economy policy: prioritize token conservation. Prefer low or medium whenever they can make reliable forward progress. Use high only when the next generation has material correctness, safety, data-integrity, or expensive-rework risk. Use xhigh only as a rare exception when the next generation must resolve subtle cross-system ambiguity, security/data-loss risk, or repeated failed hypotheses where a wrong step would cause substantial rework. This profile intentionally does not offer max or ultra; use the normal Ares profile for work that truly requires those levels.",
 };
 
 export function decisionRequest(state, maxLeaseSteps = 10, options = {}) {
