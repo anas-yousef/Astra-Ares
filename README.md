@@ -152,4 +152,8 @@ Local fixture tests require no API keys.
 
 [Installation & removal](docs/installation.md) · [Configuration](docs/configuration.md) · [Validation](docs/validation.md) · [MIT license](LICENSE)
 
+### Optional macOS Observatory
+
+[Jev Observatory](companions/observatory/README.md) adds a floating native window and local dashboard for inspecting confirmed effort distributions, lease reuse, evaluator latency, and cost. It reads existing logs, requires no provider credentials, and installs separately from the CLI. It does not claim proven token savings.
+
 Independent software, unaffiliated with OpenAI, TypeSafe, OpenRouter, or Vercel. The bridge is MIT-licensed; the patched Codex source is Apache-2.0. See [third-party notices](THIRD_PARTY_NOTICES.md).

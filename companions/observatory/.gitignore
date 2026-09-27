@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.sqlite*
+.env*
+
+# Local telemetry, exports, credentials, and macOS build artifacts
+*.jsonl
+*.log
+*.db
+*.db-*
+*.app/
+*.dSYM/
+.DS_Store
+exports/
+jev-observatory-*.json
+*.pem
+*.key
