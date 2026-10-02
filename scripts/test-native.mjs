@@ -7,8 +7,7 @@ for (const [name, model] of [
   ["context"],
   ["session"],
   ["selection", "gpt-6-astra"],
-  ["selection", "gpt-6-sol"],
-  ["selection", "gpt-6-luna"],
+  ["selection", "gpt-6.1-sol"],
 ]) {
   const out = resolve(`work/test-${name}-${model ?? "astra"}-${Date.now()}`);
   mkdirSync(out, { recursive: true });

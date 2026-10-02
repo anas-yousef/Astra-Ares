@@ -25,6 +25,8 @@ const astra = structuredClone(
   catalog.models.find((m) => m.slug === "gpt-6-astra"),
 );
 astra.use_responses_lite = true;
+// Codex 0.160 gates native effort updates on this model capability.
+astra.supports_reasoning_effort_updates = true;
 const other = {
   ...structuredClone(astra),
   slug: "fixture-native-second",

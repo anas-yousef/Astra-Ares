@@ -29,6 +29,8 @@ const astra = structuredClone(
 );
 assert(astra);
 astra.use_responses_lite = true;
+// Codex 0.160 gates native effort updates on this model capability.
+astra.supports_reasoning_effort_updates = true;
 writeFileSync(
   join(evidenceDir, "models.json"),
   JSON.stringify({ models: [astra] }),

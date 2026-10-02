@@ -14,13 +14,11 @@ import { CodexRpc } from "./rpc.mjs";
 const binary = resolve(process.argv[2]),
   evidence = resolve(process.argv[3]);
 const baseModel = process.argv[4] ?? "gpt-6-astra";
-const alias = {
-  "gpt-6-astra": "Astra-Jev",
-  "gpt-6-sol": "Sol-Jev",
-  "gpt-6-luna": "Luna-Jev",
-}[baseModel];
+const [alias, displayName] = {
+  "gpt-6-astra": ["Astra-Jev", "Astra Ares"],
+  "gpt-6.1-sol": ["Sol-6.1-Jev", "Sol 6.1 Ares"],
+}[baseModel] ?? [];
 assert(alias, "Unknown fixture model");
-const displayName = alias.replace("-Jev", " Ares");
 mkdirSync(evidence, { recursive: true });
 const socketDir = mkdtempSync(join(tmpdir(), "cj-select-"));
 const home = join(evidence, "home");
@@ -32,6 +30,8 @@ const astra = structuredClone(
   catalog.models.find((m) => m.slug === "gpt-6-astra"),
 );
 astra.use_responses_lite = true;
+// Codex 0.160 gates native effort updates on this model capability.
+astra.supports_reasoning_effort_updates = true;
 // Local fixture metadata; capabilities come from the selected catalog entry.
 astra.slug = baseModel;
 astra.display_name = baseModel;

@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <strong>Adaptive Reasoning Effort Selection for GPT-6 Astra, Sol and Luna while your Codex task runs.</strong>
+  <strong>Adaptive Reasoning Effort Selection for GPT-6 Astra and GPT-6.1 Sol while your Codex task runs.</strong>
 </p>
 
 <p align="center">
@@ -67,7 +67,7 @@ Your selected model uses your existing **Codex login with access to that model**
 astra-ares
 ```
 
-The normal Codex terminal opens. In `/model`, select **Astra Ares**, **Astra Ares Economy**, **Sol Ares**, or **Luna Ares**. Each entry keeps its underlying model fixed while Jev chooses the reasoning effort. Economy caps Astra's offered choices at low through xhigh for quota-sensitive work, with Jev instructed to choose low, medium, or high according to the task and use xhigh only in specific high-risk situations; use the normal Astra entry when max or ultra should remain available. Entries appear when the corresponding model is available in your Codex catalog. New Ares profiles select Astra Ares by default.
+The normal Codex terminal opens. In `/model`, select **Astra Ares**, **Astra Ares Economy**, or **Sol 6.1 Ares**. Each entry keeps its underlying model fixed while Jev chooses the reasoning effort. Economy caps Astra's offered choices at low through xhigh for quota-sensitive work, with Jev instructed to choose low, medium, or high according to the task and use xhigh only in specific high-risk situations; use the normal Astra entry when max or ultra should remain available. Entries appear when the corresponding model is available in your Codex catalog. New Ares profiles select Astra Ares by default.
 
 Confirmed effort changes appear directly in the transcript. Example display:
 

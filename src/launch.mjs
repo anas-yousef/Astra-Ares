@@ -35,8 +35,7 @@ export function verifyBinary(binary) {
     "Jev requires its bridge",
     "Astra Ares",
     "Astra Ares Economy",
-    "Luna Ares",
-    "Sol Ares",
+    "Sol 6.1 Ares",
   ]) {
     if (!bytes.includes(Buffer.from(marker)))
       throw new Error(
@@ -47,7 +46,7 @@ export function verifyBinary(binary) {
     execFileSync(binary, ["--version"], {
       encoding: "utf8",
       timeout: 5000,
-    }).trim() !== "codex-cli 0.155.0-alpha.9.2"
+    }).trim() !== "codex-cli 0.160.0"
   )
     throw new Error(
       "Unsupported Codex version; rebuild the pinned source with ares setup.",
