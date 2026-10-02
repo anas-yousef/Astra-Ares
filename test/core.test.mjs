@@ -141,40 +141,41 @@ for (const [label, change] of Object.entries({
     await e.handle(checkpoint(2, change));
     assert.equal(calls, 2);
   });
-test("Astra economy selection caps evaluator choices at xhigh", async () => {
-  const seenStates = [];
-  const records = [];
-  const e = new TurnEvaluator({
-    record: (r) => records.push(r),
-    jev: {
-      decide: async (state) => {
-        seenStates.push(state);
-        return { effort: "high", leaseSteps: 1, jevMs: 1 };
+for (const selection of ["Astra-Jev-Economy", "Sol-6.1-Jev-Economy"])
+  test(`${selection} caps evaluator choices at xhigh`, async () => {
+    const seenStates = [];
+    const records = [];
+    const e = new TurnEvaluator({
+      record: (r) => records.push(r),
+      jev: {
+        decide: async (state) => {
+          seenStates.push(state);
+          return { effort: "high", leaseSteps: 1, jevMs: 1 };
+        },
       },
-    },
+    });
+    const d = await e.handle(
+      checkpoint(1, {
+        selection,
+        supportedEfforts: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        currentEffort: "max",
+      }),
+    );
+    await e.handle({
+      ...d,
+      type: "applied",
+      confirmation: "native_step_context_captured",
+    });
+    assert.deepEqual(seenStates[0].supportedEfforts, [
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+    ]);
+    assert.equal(seenStates[0].selection, selection);
+    assert.equal(seenStates[0].policy, "economy");
+    assert.equal(records.find((r) => r.type === "decision").policy, "economy");
   });
-  const d = await e.handle(
-    checkpoint(1, {
-      selection: "Astra-Jev-Economy",
-      supportedEfforts: ["low", "medium", "high", "xhigh", "max", "ultra"],
-      currentEffort: "max",
-    }),
-  );
-  await e.handle({
-    ...d,
-    type: "applied",
-    confirmation: "native_step_context_captured",
-  });
-  assert.deepEqual(seenStates[0].supportedEfforts, [
-    "low",
-    "medium",
-    "high",
-    "xhigh",
-  ]);
-  assert.equal(seenStates[0].selection, "Astra-Jev-Economy");
-  assert.equal(seenStates[0].policy, "economy");
-  assert.equal(records.find((r) => r.type === "decision").policy, "economy");
-});
 test("cap is per call including multiple results and escaped multilingual text", () => {
   const text =
     "BEGIN\n" +

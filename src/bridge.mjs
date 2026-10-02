@@ -3,7 +3,10 @@ import { chmodSync } from "node:fs";
 import { EFFORTS } from "./jev.mjs";
 import { budgetToolOutputs } from "./tool-output-budget.mjs";
 
-const ECONOMY_SELECTIONS = new Set(["Astra-Jev-Economy"]);
+const ECONOMY_SELECTIONS = new Set([
+  "Astra-Jev-Economy",
+  "Sol-6.1-Jev-Economy",
+]);
 const ECONOMY_MAX_EFFORT = "xhigh";
 
 function policyForSelection(selection) {

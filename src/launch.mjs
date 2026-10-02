@@ -36,6 +36,7 @@ export function verifyBinary(binary) {
     "Astra Ares",
     "Astra Ares Economy",
     "Sol 6.1 Ares",
+    "Sol 6.1 Ares Economy",
   ]) {
     if (!bytes.includes(Buffer.from(marker)))
       throw new Error(

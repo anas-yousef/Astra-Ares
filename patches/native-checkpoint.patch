@@ -14834,10 +14834,10 @@ index 04336f56..6c3979f6 100644
 +    }
 +}
 diff --git a/codex-rs/protocol/src/openai_models.rs b/codex-rs/protocol/src/openai_models.rs
-index e5f02ac9..80767cc7 100644
+index e5f02ac9..02ac79d7 100644
 --- a/codex-rs/protocol/src/openai_models.rs
 +++ b/codex-rs/protocol/src/openai_models.rs
-@@ -53,6 +53,35 @@ pub use guardian_v2::GuardianV2TranscriptModelConfig;
+@@ -53,6 +53,36 @@ pub use guardian_v2::GuardianV2TranscriptModelConfig;
  pub const MODEL_SPECIALTY_CYBER: &str = "cyber";
  pub const SPEED_TIER_FAST: &str = "fast";
  
@@ -14848,7 +14848,7 @@ index e5f02ac9..80767cc7 100644
 +// Stable selection IDs, provider model IDs, and user-facing names.
 +// Only base models that support native reasoning effort updates are offered, so
 +// Jev's mid-turn effort changes preserve the request's cached prefix.
-+pub const JEV_MODELS: [(&str, &str, &str); 3] = [
++pub const JEV_MODELS: [(&str, &str, &str); 4] = [
 +    (ASTRA_JEV_MODEL, ASTRA_JEV_BASE_MODEL, "Astra Ares"),
 +    (
 +        ASTRA_JEV_ECONOMY_MODEL,
@@ -14856,6 +14856,7 @@ index e5f02ac9..80767cc7 100644
 +        "Astra Ares Economy",
 +    ),
 +    ("Sol-6.1-Jev", "gpt-6.1-sol", "Sol 6.1 Ares"),
++    ("Sol-6.1-Jev-Economy", "gpt-6.1-sol", "Sol 6.1 Ares Economy"),
 +];
 +
 +pub fn jev_base_model(selection: &str) -> Option<&'static str> {
